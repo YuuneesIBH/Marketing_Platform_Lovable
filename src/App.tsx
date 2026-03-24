@@ -3,8 +3,15 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Layout from "./components/Layout";
+import Dashboard from "./components/Dashboard";
+import Campagnes from "./pages/Campagnes";
+import ContentKalender from "./pages/ContentKalender";
+import Producten from "./pages/Producten";
+import Analytics from "./pages/Analytics";
+import Team from "./pages/Team";
+import Instellingen from "./pages/Instellingen";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +22,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/campagnes" element={<Campagnes />} />
+            <Route path="/content-kalender" element={<ContentKalender />} />
+            <Route path="/producten" element={<Producten />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/instellingen" element={<Instellingen />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
