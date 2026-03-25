@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, Package, Megaphone, BarChart3, Users, Settings, Sparkles } from "lucide-react";
+import { LayoutDashboard, Calendar, Package, Megaphone, BarChart3, Users, Settings, Sparkles, MessageCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
