@@ -12,6 +12,7 @@ import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
 import Instellingen from "./pages/Instellingen";
 import Berichten from "./pages/Berichten";
+import Promotiemateriaal from "./pages/Promotiemateriaal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
