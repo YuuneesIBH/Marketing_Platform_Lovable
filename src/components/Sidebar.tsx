@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, Package, Megaphone, BarChart3, Users, Settings, Sparkles, MessageCircle, Printer } from "lucide-react";
+import { LayoutDashboard, Calendar, Megaphone, BarChart3, Users, Settings, Sparkles, MessageCircle, Printer, MessagesSquare } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
@@ -7,7 +7,7 @@ const navItems = [
   { icon: Megaphone, label: "Campagnes", path: "/campagnes" },
   { icon: MessageCircle, label: "Berichten", path: "/berichten" },
   { icon: Calendar, label: "Content Kalender", path: "/content-kalender" },
-  { icon: Package, label: "Producten", path: "/producten" },
+  { icon: MessagesSquare, label: "Groepschat", path: "/groepschat" },
   { icon: Printer, label: "Promotiemateriaal", path: "/promotiemateriaal" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: Users, label: "Team", path: "/team" },

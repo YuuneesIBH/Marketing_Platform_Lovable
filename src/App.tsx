@@ -7,7 +7,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import Campagnes from "./pages/Campagnes";
 import ContentKalender from "./pages/ContentKalender";
-import Producten from "./pages/Producten";
+import Groepschat from "./pages/Groepschat";
 import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
 import Instellingen from "./pages/Instellingen";
@@ -28,7 +28,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/campagnes" element={<Campagnes />} />
             <Route path="/content-kalender" element={<ContentKalender />} />
-            <Route path="/producten" element={<Producten />} />
+            <Route path="/groepschat" element={<Groepschat />} />
             <Route path="/promotiemateriaal" element={<Promotiemateriaal />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/berichten" element={<Berichten />} />
