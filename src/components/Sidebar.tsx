@@ -7,7 +7,7 @@ const navItems = [
   { icon: Megaphone, label: "Campagnes", path: "/campagnes" },
   { icon: MessageCircle, label: "Berichten", path: "/berichten" },
   { icon: Calendar, label: "Content Kalender", path: "/content-kalender" },
-  
+  { icon: MessagesSquare, label: "Groepschat", path: "/groepschat" },
   { icon: Printer, label: "Promotiemateriaal", path: "/promotiemateriaal" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: Users, label: "Team", path: "/team" },
