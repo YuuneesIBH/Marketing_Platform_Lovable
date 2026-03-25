@@ -1,10 +1,11 @@
-import { LayoutDashboard, Calendar, Package, Megaphone, BarChart3, Users, Settings, Sparkles } from "lucide-react";
+import { LayoutDashboard, Calendar, Package, Megaphone, BarChart3, Users, Settings, Sparkles, MessageCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Megaphone, label: "Campagnes", path: "/campagnes" },
+  { icon: MessageCircle, label: "Berichten", path: "/berichten" },
   { icon: Calendar, label: "Content Kalender", path: "/content-kalender" },
   { icon: Package, label: "Producten", path: "/producten" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
