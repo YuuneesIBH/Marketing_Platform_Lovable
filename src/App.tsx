@@ -7,7 +7,7 @@ import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import Campagnes from "./pages/Campagnes";
 import ContentKalender from "./pages/ContentKalender";
-import Producten from "./pages/Producten";
+
 import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
 import Instellingen from "./pages/Instellingen";
