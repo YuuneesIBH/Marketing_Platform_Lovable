@@ -12,6 +12,7 @@ import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
 import Instellingen from "./pages/Instellingen";
 import Berichten from "./pages/Berichten";
+import Promotiemateriaal from "./pages/Promotiemateriaal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/campagnes" element={<Campagnes />} />
             <Route path="/content-kalender" element={<ContentKalender />} />
             <Route path="/producten" element={<Producten />} />
+            <Route path="/promotiemateriaal" element={<Promotiemateriaal />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/berichten" element={<Berichten />} />
             <Route path="/team" element={<Team />} />
