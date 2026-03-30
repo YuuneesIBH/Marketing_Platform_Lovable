@@ -16,14 +16,7 @@ interface TeamMember {
 
 const colors = ["bg-primary", "bg-sage", "bg-charcoal", "bg-accent"];
 
-const initialTeam: TeamMember[] = [
-  { name: "Ji-Soo Kim", role: "Marketing Lead", email: "jisoo@oppaseoul.nl", initials: "JS", color: "bg-primary" },
-  { name: "Mila de Vries", role: "Content Creator", email: "mila@oppaseoul.nl", initials: "MV", color: "bg-sage" },
-  { name: "Thomas Berg", role: "Performance Marketing", email: "thomas@oppaseoul.nl", initials: "TB", color: "bg-charcoal" },
-  { name: "Seo-Yeon Park", role: "Social Media Manager", email: "seoyeon@oppaseoul.nl", initials: "SP", color: "bg-primary" },
-  { name: "Lucas Jansen", role: "Graphic Designer", email: "lucas@oppaseoul.nl", initials: "LJ", color: "bg-sage" },
-  { name: "Emma Bakker", role: "Influencer Relations", email: "emma@oppaseoul.nl", initials: "EB", color: "bg-accent" },
-];
+const initialTeam: TeamMember[] = [];
 
 const Team = () => {
   const [team, setTeam] = useState<TeamMember[]>(initialTeam);
