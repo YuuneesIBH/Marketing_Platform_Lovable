@@ -167,6 +167,9 @@ const ContentKalender = () => {
                 <div className={`px-2 py-0.5 rounded text-[10px] font-medium ${e.color}`}>{e.platform}</div>
                 <p className="text-sm font-medium text-foreground flex-1">{e.title}</p>
                 <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {e.time}</span>
+                <button onClick={() => handleEdit(e)} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
                 <button onClick={() => handleDeleteEvent(e.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
                   <X className="w-3.5 h-3.5" />
                 </button>
