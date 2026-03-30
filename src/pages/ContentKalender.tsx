@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Plus, Clock, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Clock, X, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,17 +27,7 @@ const platformColors: Record<string, string> = {
   Anders: "bg-muted text-muted-foreground",
 };
 
-const initialEvents: CalendarEvent[] = [
-  { id: "1", title: "Serum tutorial reel", platform: "Instagram", time: "10:00", date: "2026-03-03", color: platformColors.Instagram },
-  { id: "2", title: "Routine video", platform: "YouTube", time: "14:00", date: "2026-03-07", color: platformColors.YouTube },
-  { id: "3", title: "Sheet mask promo", platform: "Instagram", time: "09:00", date: "2026-03-10", color: platformColors.Instagram },
-  { id: "4", title: "Blog: K-beauty trends", platform: "Website", time: "12:00", date: "2026-03-12", color: platformColors.Website },
-  { id: "5", title: "Influencer takeover", platform: "TikTok", time: "18:00", date: "2026-03-15", color: platformColors.TikTok },
-  { id: "6", title: "Product launch post", platform: "Instagram", time: "11:00", date: "2026-03-18", color: platformColors.Instagram },
-  { id: "7", title: "Newsletter Q2", platform: "Email", time: "09:00", date: "2026-03-21", color: platformColors.Email },
-  { id: "8", title: "Productfoto shoot", platform: "Studio", time: "10:00", date: "2026-03-25", color: platformColors.Studio },
-  { id: "9", title: "Influencer meeting", platform: "Kantoor", time: "11:00", date: "2026-03-27", color: platformColors.Kantoor },
-];
+const initialEvents: CalendarEvent[] = [];
 
 const dayNames = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 const monthNames = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
@@ -57,6 +47,7 @@ const ContentKalender = () => {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", platform: "", time: "10:00" });
 
   const daysInMonth = getDaysInMonth(year, month);
@@ -87,24 +78,45 @@ const ContentKalender = () => {
     else setMonth(month + 1);
   };
 
-  const handleCreate = () => {
+  const handleSave = () => {
     if (!form.title || !form.platform || selectedDay === null) {
       toast({ title: "Vul alle velden in", variant: "destructive" });
       return;
     }
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
-    const newEvent: CalendarEvent = {
-      id: Date.now().toString(),
-      title: form.title,
-      platform: form.platform,
-      time: form.time,
-      date: dateStr,
-      color: platformColors[form.platform] || platformColors.Anders,
-    };
-    setEvents([...events, newEvent]);
+    if (editId) {
+      setEvents(events.map(e => e.id === editId ? {
+        ...e,
+        title: form.title,
+        platform: form.platform,
+        time: form.time,
+        date: dateStr,
+        color: platformColors[form.platform] || platformColors.Anders,
+      } : e));
+      toast({ title: "Event bijgewerkt", description: `"${form.title}" is opgeslagen.` });
+    } else {
+      const newEvent: CalendarEvent = {
+        id: Date.now().toString(),
+        title: form.title,
+        platform: form.platform,
+        time: form.time,
+        date: dateStr,
+        color: platformColors[form.platform] || platformColors.Anders,
+      };
+      setEvents([...events, newEvent]);
+      toast({ title: "Event toegevoegd", description: `"${form.title}" op ${selectedDay} ${monthNames[month]}.` });
+    }
     setForm({ title: "", platform: "", time: "10:00" });
+    setEditId(null);
     setOpen(false);
-    toast({ title: "Event toegevoegd", description: `"${form.title}" op ${selectedDay} ${monthNames[month]}.` });
+  };
+
+  const handleEdit = (e: CalendarEvent) => {
+    const d = new Date(e.date);
+    setSelectedDay(d.getDate());
+    setForm({ title: e.title, platform: e.platform, time: e.time });
+    setEditId(e.id);
+    setOpen(true);
   };
 
   const handleDeleteEvent = (id: string) => {
@@ -155,6 +167,9 @@ const ContentKalender = () => {
                 <div className={`px-2 py-0.5 rounded text-[10px] font-medium ${e.color}`}>{e.platform}</div>
                 <p className="text-sm font-medium text-foreground flex-1">{e.title}</p>
                 <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {e.time}</span>
+                <button onClick={() => handleEdit(e)} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
                 <button onClick={() => handleDeleteEvent(e.id)} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive">
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -205,11 +220,11 @@ const ContentKalender = () => {
       </div>
 
       {/* Create event dialog */}
-      <Dialog open={open && selectedDay !== null} onOpenChange={(v) => { setOpen(v); if (!v) setSelectedDay(null); }}>
+      <Dialog open={open && selectedDay !== null} onOpenChange={(v) => { setOpen(v); if (!v) { setSelectedDay(null); setEditId(null); setForm({ title: "", platform: "", time: "10:00" }); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display">
-              Event toevoegen — {selectedDay} {monthNames[month]}
+              {editId ? "Event bewerken" : `Event toevoegen — ${selectedDay} ${monthNames[month]}`}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
@@ -250,8 +265,8 @@ const ContentKalender = () => {
               <Label>Tijd</Label>
               <Input type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
             </div>
-            <Button onClick={handleCreate} className="w-full">
-              <Plus className="w-4 h-4" /> Event toevoegen
+            <Button onClick={handleSave} className="w-full">
+              <Plus className="w-4 h-4" /> {editId ? "Opslaan" : "Event toevoegen"}
             </Button>
           </div>
         </DialogContent>
