@@ -33,60 +33,7 @@ const platformConfig: Record<Platform, { icon: React.ElementType; label: string;
   facebook: { icon: Facebook, label: "Facebook", color: "bg-blue-600" },
 };
 
-const initialConversations: Conversation[] = [
-  {
-    id: "1", name: "Soo-Yeon Park", platform: "instagram", avatar: "SP",
-    lastMessage: "Hii! Wanneer komt de Glass Skin Serum weer op voorraad? 💕",
-    lastMessageTime: new Date(2026, 2, 25, 10, 32), unread: true,
-    messages: [
-      { id: "m1", text: "Hii! Wanneer komt de Glass Skin Serum weer op voorraad? 💕", sender: "customer", timestamp: new Date(2026, 2, 25, 10, 32) },
-    ],
-  },
-  {
-    id: "2", name: "Lisa van den Berg", platform: "tiktok", avatar: "LB",
-    lastMessage: "Omg die video over de 10-step routine ging viral!! Can I collab?",
-    lastMessageTime: new Date(2026, 2, 25, 9, 15), unread: true,
-    messages: [
-      { id: "m1", text: "Heyy jullie content is echt top 🔥", sender: "customer", timestamp: new Date(2026, 2, 25, 9, 10) },
-      { id: "m2", text: "Omg die video over de 10-step routine ging viral!! Can I collab?", sender: "customer", timestamp: new Date(2026, 2, 25, 9, 15) },
-    ],
-  },
-  {
-    id: "3", name: "Emma de Vries", platform: "facebook", avatar: "EV",
-    lastMessage: "Bedankt voor het snelle antwoord! Ik bestel vandaag nog 😊",
-    lastMessageTime: new Date(2026, 2, 24, 18, 45), unread: false,
-    messages: [
-      { id: "m1", text: "Hallo, leveren jullie ook naar België?", sender: "customer", timestamp: new Date(2026, 2, 24, 17, 30) },
-      { id: "m2", text: "Hoi Emma! Ja zeker, we leveren door heel de Benelux. Verzendkosten zijn €4,95 of gratis bij bestellingen boven €50 🇧🇪✨", sender: "team", timestamp: new Date(2026, 2, 24, 17, 45) },
-      { id: "m3", text: "Bedankt voor het snelle antwoord! Ik bestel vandaag nog 😊", sender: "customer", timestamp: new Date(2026, 2, 24, 18, 45) },
-    ],
-  },
-  {
-    id: "4", name: "Min-Ji Lee", platform: "instagram", avatar: "ML",
-    lastMessage: "Zijn jullie producten cruelty-free? 🐰",
-    lastMessageTime: new Date(2026, 2, 24, 14, 22), unread: false,
-    messages: [
-      { id: "m1", text: "Zijn jullie producten cruelty-free? 🐰", sender: "customer", timestamp: new Date(2026, 2, 24, 14, 22) },
-      { id: "m2", text: "Hi Min-Ji! Ja, al onze producten zijn 100% cruelty-free en vegan 🌿💚", sender: "team", timestamp: new Date(2026, 2, 24, 14, 35) },
-    ],
-  },
-  {
-    id: "5", name: "Thomas Bakker", platform: "tiktok", avatar: "TB",
-    lastMessage: "Welke moisturizer raden jullie aan voor droge huid?",
-    lastMessageTime: new Date(2026, 2, 24, 11, 5), unread: true,
-    messages: [
-      { id: "m1", text: "Welke moisturizer raden jullie aan voor droge huid?", sender: "customer", timestamp: new Date(2026, 2, 24, 11, 5) },
-    ],
-  },
-  {
-    id: "6", name: "Yuna Kim", platform: "facebook", avatar: "YK",
-    lastMessage: "Ik heb een klacht over mijn bestelling #4821",
-    lastMessageTime: new Date(2026, 2, 23, 16, 50), unread: true,
-    messages: [
-      { id: "m1", text: "Ik heb een klacht over mijn bestelling #4821", sender: "customer", timestamp: new Date(2026, 2, 23, 16, 50) },
-    ],
-  },
-];
+const initialConversations: Conversation[] = [];
 
 const Berichten = () => {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
