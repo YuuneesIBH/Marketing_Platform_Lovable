@@ -47,6 +47,7 @@ const ContentKalender = () => {
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: "", platform: "", time: "10:00" });
 
   const daysInMonth = getDaysInMonth(year, month);
