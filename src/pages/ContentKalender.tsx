@@ -220,11 +220,11 @@ const ContentKalender = () => {
       </div>
 
       {/* Create event dialog */}
-      <Dialog open={open && selectedDay !== null} onOpenChange={(v) => { setOpen(v); if (!v) setSelectedDay(null); }}>
+      <Dialog open={open && selectedDay !== null} onOpenChange={(v) => { setOpen(v); if (!v) { setSelectedDay(null); setEditId(null); setForm({ title: "", platform: "", time: "10:00" }); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="font-display">
-              Event toevoegen — {selectedDay} {monthNames[month]}
+              {editId ? "Event bewerken" : `Event toevoegen — ${selectedDay} ${monthNames[month]}`}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
