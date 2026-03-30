@@ -78,24 +78,45 @@ const ContentKalender = () => {
     else setMonth(month + 1);
   };
 
-  const handleCreate = () => {
+  const handleSave = () => {
     if (!form.title || !form.platform || selectedDay === null) {
       toast({ title: "Vul alle velden in", variant: "destructive" });
       return;
     }
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(selectedDay).padStart(2, "0")}`;
-    const newEvent: CalendarEvent = {
-      id: Date.now().toString(),
-      title: form.title,
-      platform: form.platform,
-      time: form.time,
-      date: dateStr,
-      color: platformColors[form.platform] || platformColors.Anders,
-    };
-    setEvents([...events, newEvent]);
+    if (editId) {
+      setEvents(events.map(e => e.id === editId ? {
+        ...e,
+        title: form.title,
+        platform: form.platform,
+        time: form.time,
+        date: dateStr,
+        color: platformColors[form.platform] || platformColors.Anders,
+      } : e));
+      toast({ title: "Event bijgewerkt", description: `"${form.title}" is opgeslagen.` });
+    } else {
+      const newEvent: CalendarEvent = {
+        id: Date.now().toString(),
+        title: form.title,
+        platform: form.platform,
+        time: form.time,
+        date: dateStr,
+        color: platformColors[form.platform] || platformColors.Anders,
+      };
+      setEvents([...events, newEvent]);
+      toast({ title: "Event toegevoegd", description: `"${form.title}" op ${selectedDay} ${monthNames[month]}.` });
+    }
     setForm({ title: "", platform: "", time: "10:00" });
+    setEditId(null);
     setOpen(false);
-    toast({ title: "Event toegevoegd", description: `"${form.title}" op ${selectedDay} ${monthNames[month]}.` });
+  };
+
+  const handleEdit = (e: CalendarEvent) => {
+    const d = new Date(e.date);
+    setSelectedDay(d.getDate());
+    setForm({ title: e.title, platform: e.platform, time: e.time });
+    setEditId(e.id);
+    setOpen(true);
   };
 
   const handleDeleteEvent = (id: string) => {
