@@ -262,8 +262,8 @@ const ContentKalender = () => {
               <Label>Tijd</Label>
               <Input type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
             </div>
-            <Button onClick={handleCreate} className="w-full">
-              <Plus className="w-4 h-4" /> Event toevoegen
+            <Button onClick={handleSave} className="w-full">
+              <Plus className="w-4 h-4" /> {editId ? "Opslaan" : "Event toevoegen"}
             </Button>
           </div>
         </DialogContent>
