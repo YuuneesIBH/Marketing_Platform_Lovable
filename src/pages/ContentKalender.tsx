@@ -27,17 +27,7 @@ const platformColors: Record<string, string> = {
   Anders: "bg-muted text-muted-foreground",
 };
 
-const initialEvents: CalendarEvent[] = [
-  { id: "1", title: "Serum tutorial reel", platform: "Instagram", time: "10:00", date: "2026-03-03", color: platformColors.Instagram },
-  { id: "2", title: "Routine video", platform: "YouTube", time: "14:00", date: "2026-03-07", color: platformColors.YouTube },
-  { id: "3", title: "Sheet mask promo", platform: "Instagram", time: "09:00", date: "2026-03-10", color: platformColors.Instagram },
-  { id: "4", title: "Blog: K-beauty trends", platform: "Website", time: "12:00", date: "2026-03-12", color: platformColors.Website },
-  { id: "5", title: "Influencer takeover", platform: "TikTok", time: "18:00", date: "2026-03-15", color: platformColors.TikTok },
-  { id: "6", title: "Product launch post", platform: "Instagram", time: "11:00", date: "2026-03-18", color: platformColors.Instagram },
-  { id: "7", title: "Newsletter Q2", platform: "Email", time: "09:00", date: "2026-03-21", color: platformColors.Email },
-  { id: "8", title: "Productfoto shoot", platform: "Studio", time: "10:00", date: "2026-03-25", color: platformColors.Studio },
-  { id: "9", title: "Influencer meeting", platform: "Kantoor", time: "11:00", date: "2026-03-27", color: platformColors.Kantoor },
-];
+const initialEvents: CalendarEvent[] = [];
 
 const dayNames = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"];
 const monthNames = ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"];
