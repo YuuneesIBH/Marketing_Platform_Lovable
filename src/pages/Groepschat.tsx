@@ -7,26 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
-interface ChatMessage {
-  id: string;
-  text: string;
-  sender: string;
-  avatar: string;
-  color: string;
-  timestamp: Date;
-}
-
-interface Channel {
-  id: string;
-  name: string;
-  description: string;
-  messages: ChatMessage[];
-}
-
-const teamMembers: { name: string; avatar: string; color: string }[] = [];
-
-const currentUser = teamMembers[0];
+import { useTeam } from "@/contexts/TeamContext";
 
 const initialChannels: Channel[] = [
   { id: "1", name: "algemeen", description: "Algemene teamupdates en aankondigingen", messages: [] },
