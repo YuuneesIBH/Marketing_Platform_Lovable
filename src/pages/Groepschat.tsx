@@ -29,36 +29,10 @@ const teamMembers: { name: string; avatar: string; color: string }[] = [];
 const currentUser = teamMembers[0];
 
 const initialChannels: Channel[] = [
-  {
-    id: "1", name: "algemeen", description: "Algemene teamupdates en aankondigingen",
-    messages: [
-      { id: "m1", text: "Goedemorgen team! 🌸 De nieuwe campagne visuals zijn klaar voor review.", sender: "Min-Ho Park", avatar: "MP", color: "bg-chart-1", timestamp: new Date(2026, 2, 25, 9, 0) },
-      { id: "m2", text: "Top! Ik check ze zo meteen. Komen die ook op de TikTok pagina?", sender: "Yuna Lee", avatar: "YL", color: "bg-chart-2", timestamp: new Date(2026, 2, 25, 9, 5) },
-      { id: "m3", text: "Ja, ik heb 3 varianten gemaakt: vierkant voor Insta, vertical voor TikTok en landscape voor Facebook.", sender: "Min-Ho Park", avatar: "MP", color: "bg-chart-1", timestamp: new Date(2026, 2, 25, 9, 8) },
-      { id: "m4", text: "Perfect. Laten we ze vandaag nog goedkeuren zodat we morgen live kunnen 🚀", sender: "Ji-Soo Kim", avatar: "JK", color: "bg-primary", timestamp: new Date(2026, 2, 25, 9, 15) },
-    ],
-  },
-  {
-    id: "2", name: "campagnes", description: "Campagne planning en strategie",
-    messages: [
-      { id: "m1", text: "De Spring Glow campagne loopt super! 18% meer engagement dan vorige maand.", sender: "Lisa Bakker", avatar: "LB", color: "bg-chart-4", timestamp: new Date(2026, 2, 24, 14, 30) },
-      { id: "m2", text: "Geweldig! Welke content performde het best?", sender: "Ji-Soo Kim", avatar: "JK", color: "bg-primary", timestamp: new Date(2026, 2, 24, 14, 35) },
-      { id: "m3", text: "De before/after reels op TikTok. Die hadden 240K views gemiddeld 🔥", sender: "Lisa Bakker", avatar: "LB", color: "bg-chart-4", timestamp: new Date(2026, 2, 24, 14, 40) },
-    ],
-  },
-  {
-    id: "3", name: "content-ideeën", description: "Brainstorm en content inspiratie",
-    messages: [
-      { id: "m1", text: "Idee: een 'K-beauty mythbusters' serie voor Instagram Reels?", sender: "Thomas de Vries", avatar: "TV", color: "bg-chart-3", timestamp: new Date(2026, 2, 24, 11, 0) },
-      { id: "m2", text: "Ooh ja! We kunnen de top 5 skincare mythen debunken met onze producten.", sender: "Yuna Lee", avatar: "YL", color: "bg-chart-2", timestamp: new Date(2026, 2, 24, 11, 10) },
-    ],
-  },
-  {
-    id: "4", name: "design", description: "Design feedback en assets",
-    messages: [
-      { id: "m1", text: "Nieuwe flyer designs staan in de Promotiemateriaal pagina, graag feedback! 🎨", sender: "Min-Ho Park", avatar: "MP", color: "bg-chart-1", timestamp: new Date(2026, 2, 23, 16, 0) },
-    ],
-  },
+  { id: "1", name: "algemeen", description: "Algemene teamupdates en aankondigingen", messages: [] },
+  { id: "2", name: "campagnes", description: "Campagne planning en strategie", messages: [] },
+  { id: "3", name: "content-ideeën", description: "Brainstorm en content inspiratie", messages: [] },
+  { id: "4", name: "design", description: "Design feedback en assets", messages: [] },
 ];
 
 const Groepschat = () => {
