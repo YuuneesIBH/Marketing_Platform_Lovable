@@ -50,7 +50,7 @@ const Groepschat = () => {
   }, [selected?.messages.length]);
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !currentUser) return;
     const newMsg: ChatMessage = {
       id: `m${Date.now()}`,
       text: message,
