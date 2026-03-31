@@ -24,13 +24,7 @@ interface Channel {
   messages: ChatMessage[];
 }
 
-const teamMembers = [
-  { name: "Ji-Soo Kim", avatar: "JK", color: "bg-primary" },
-  { name: "Min-Ho Park", avatar: "MP", color: "bg-chart-1" },
-  { name: "Yuna Lee", avatar: "YL", color: "bg-chart-2" },
-  { name: "Thomas de Vries", avatar: "TV", color: "bg-chart-3" },
-  { name: "Lisa Bakker", avatar: "LB", color: "bg-chart-4" },
-];
+const teamMembers: { name: string; avatar: string; color: string }[] = [];
 
 const currentUser = teamMembers[0];
 
