@@ -55,7 +55,7 @@ const Groepschat = () => {
       id: `m${Date.now()}`,
       text: message,
       sender: currentUser.name,
-      avatar: currentUser.avatar,
+      avatar: currentUser.initials,
       color: currentUser.color,
       timestamp: new Date(),
     };
