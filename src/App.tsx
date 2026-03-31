@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { TeamProvider } from "./contexts/TeamContext";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,24 +21,26 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/campagnes" element={<Campagnes />} />
-            <Route path="/content-kalender" element={<ContentKalender />} />
-            <Route path="/groepschat" element={<Groepschat />} />
-            <Route path="/promotiemateriaal" element={<Promotiemateriaal />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/berichten" element={<Berichten />} />
-            <Route path="/team" element={<Team />} />
-            <Route path="/instellingen" element={<Instellingen />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <TeamProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/campagnes" element={<Campagnes />} />
+              <Route path="/content-kalender" element={<ContentKalender />} />
+              <Route path="/groepschat" element={<Groepschat />} />
+              <Route path="/promotiemateriaal" element={<Promotiemateriaal />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/berichten" element={<Berichten />} />
+              <Route path="/team" element={<Team />} />
+              <Route path="/instellingen" element={<Instellingen />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TeamProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

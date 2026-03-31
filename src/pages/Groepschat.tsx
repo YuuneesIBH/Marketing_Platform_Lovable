@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useTeam } from "@/contexts/TeamContext";
 
 interface ChatMessage {
   id: string;
@@ -24,10 +25,6 @@ interface Channel {
   messages: ChatMessage[];
 }
 
-const teamMembers: { name: string; avatar: string; color: string }[] = [];
-
-const currentUser = teamMembers[0];
-
 const initialChannels: Channel[] = [
   { id: "1", name: "algemeen", description: "Algemene teamupdates en aankondigingen", messages: [] },
   { id: "2", name: "campagnes", description: "Campagne planning en strategie", messages: [] },
@@ -36,6 +33,8 @@ const initialChannels: Channel[] = [
 ];
 
 const Groepschat = () => {
+  const { team } = useTeam();
+  const currentUser = team[0];
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [selectedId, setSelectedId] = useState("1");
   const [message, setMessage] = useState("");
@@ -51,12 +50,12 @@ const Groepschat = () => {
   }, [selected?.messages.length]);
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !currentUser) return;
     const newMsg: ChatMessage = {
       id: `m${Date.now()}`,
       text: message,
       sender: currentUser.name,
-      avatar: currentUser.avatar,
+      avatar: currentUser.initials,
       color: currentUser.color,
       timestamp: new Date(),
     };
@@ -183,13 +182,13 @@ const Groepschat = () => {
           </ScrollArea>
           {/* Online members */}
           <div className="p-4 border-t border-border">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Online — {teamMembers.length}</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Online — {team.length}</p>
             <div className="space-y-2">
-              {teamMembers.map((m) => (
+              {team.map((m) => (
                 <div key={m.name} className="flex items-center gap-2">
                   <div className="relative">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className={`${m.color} text-primary-foreground text-[10px] font-semibold`}>{m.avatar}</AvatarFallback>
+                      <AvatarFallback className={`${m.color} text-primary-foreground text-[10px] font-semibold`}>{m.initials}</AvatarFallback>
                     </Avatar>
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-chart-2 rounded-full border-2 border-card" />
                   </div>
