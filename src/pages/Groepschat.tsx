@@ -33,6 +33,8 @@ const initialChannels: Channel[] = [
 ];
 
 const Groepschat = () => {
+  const { team } = useTeam();
+  const currentUser = team[0];
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [selectedId, setSelectedId] = useState("1");
   const [message, setMessage] = useState("");
