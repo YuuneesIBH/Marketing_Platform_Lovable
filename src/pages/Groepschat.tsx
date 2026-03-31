@@ -188,7 +188,7 @@ const Groepschat = () => {
                 <div key={m.name} className="flex items-center gap-2">
                   <div className="relative">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className={`${m.color} text-primary-foreground text-[10px] font-semibold`}>{m.avatar}</AvatarFallback>
+                      <AvatarFallback className={`${m.color} text-primary-foreground text-[10px] font-semibold`}>{m.initials}</AvatarFallback>
                     </Avatar>
                     <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-chart-2 rounded-full border-2 border-card" />
                   </div>
