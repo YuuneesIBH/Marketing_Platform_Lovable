@@ -182,9 +182,9 @@ const Groepschat = () => {
           </ScrollArea>
           {/* Online members */}
           <div className="p-4 border-t border-border">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Online — {teamMembers.length}</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Online — {team.length}</p>
             <div className="space-y-2">
-              {teamMembers.map((m) => (
+              {team.map((m) => (
                 <div key={m.name} className="flex items-center gap-2">
                   <div className="relative">
                     <Avatar className="h-6 w-6">
