@@ -9,6 +9,22 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useTeam } from "@/contexts/TeamContext";
 
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: string;
+  avatar: string;
+  color: string;
+  timestamp: Date;
+}
+
+interface Channel {
+  id: string;
+  name: string;
+  description: string;
+  messages: ChatMessage[];
+}
+
 const initialChannels: Channel[] = [
   { id: "1", name: "algemeen", description: "Algemene teamupdates en aankondigingen", messages: [] },
   { id: "2", name: "campagnes", description: "Campagne planning en strategie", messages: [] },
