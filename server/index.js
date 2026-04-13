@@ -5,21 +5,15 @@ import pg from "pg";
 const { Pool } = pg;
 
 const app = express();
-const port = Number(process.env.API_PORT ?? 3001);
+const port = 3001;
 const connectionString =
-  process.env.DATABASE_URL ??
-  `postgresql://${encodeURIComponent(process.env.PGUSER ?? "postgres")}:${encodeURIComponent(
-    process.env.PGPASSWORD ?? "",
-  )}@${process.env.PGHOST ?? "127.0.0.1"}:${process.env.PGPORT ?? "5432"}/${process.env.PGDATABASE ?? "postgres"}`;
+  "postgresql://postgres:Hajar2026!@35.189.244.250:5432/postgres";
 
 const pool = new Pool({
   connectionString,
-  ssl:
-    process.env.PGSSLMODE === "disable"
-      ? false
-      : {
-          rejectUnauthorized: false,
-        },
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 const defaults = {

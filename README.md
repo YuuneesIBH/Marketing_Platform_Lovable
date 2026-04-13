@@ -10,3 +10,5 @@ Interne marketingtool voor Oppa Seoul.
 4. Start de frontend met `npm run dev`.
 
 Alle user-aangemaakte data wordt via `/api/state/:key` in Postgres opgeslagen.
+
+Belangrijk: de API leest nu automatisch `.env` in via `dotenv`.

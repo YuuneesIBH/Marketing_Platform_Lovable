@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const API_BASE = "http://127.0.0.1:3001";
+
 type StateKey =
   | "team"
   | "contacts"
@@ -21,7 +23,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function fetchState<T>(key: StateKey, fallback: T): Promise<T> {
   try {
-    const response = await fetch(`/api/state/${key}`);
+    const response = await fetch(`${API_BASE}/api/state/${key}`);
     const payload = await handleResponse<{ key: string; value: T }>(response);
     return payload.value ?? fallback;
   } catch (error) {
@@ -32,7 +34,7 @@ export async function fetchState<T>(key: StateKey, fallback: T): Promise<T> {
 
 export async function saveState<T>(key: StateKey, value: T): Promise<T> {
   const payload = await handleResponse<{ key: string; value: T }>(
-    fetch(`/api/state/${key}`, {
+    fetch(`${API_BASE}/api/state/${key}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
