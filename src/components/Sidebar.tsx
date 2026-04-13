@@ -1,4 +1,4 @@
-import { LayoutDashboard, Calendar, BarChart3, Users, Settings, Sparkles, MessageCircle, MessagesSquare, Workflow, Contact, Radio } from "lucide-react";
+import { LayoutDashboard, Calendar, Users, Settings, MessageCircle, MessagesSquare, Workflow, Contact, Radio } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
@@ -10,7 +10,7 @@ const navItems = [
   { icon: Radio, label: "Broadcasts", path: "/broadcasts" },
   { icon: Calendar, label: "Content Kalender", path: "/content-kalender" },
   { icon: MessagesSquare, label: "Groepschat", path: "/groepschat" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  
   { icon: Users, label: "Team", path: "/team" },
   { icon: Settings, label: "Instellingen", path: "/instellingen" },
 ];
@@ -21,12 +21,9 @@ const Sidebar = () => {
   return (
     <aside className="w-64 min-h-screen bg-card border-r border-border flex flex-col shrink-0">
       <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-primary" />
-          <span className="font-display text-xl font-semibold text-foreground tracking-tight">
-            Oppa Seoul
-          </span>
-        </div>
+        <span className="font-display text-xl font-semibold text-foreground tracking-tight">
+          Oppa Seoul
+        </span>
         <p className="text-xs text-muted-foreground mt-1 font-body">Marketing Platform</p>
       </div>
       <nav className="flex-1 p-4 space-y-1">
