@@ -1,14 +1,15 @@
-import { LayoutDashboard, Calendar, Megaphone, BarChart3, Users, Settings, Sparkles, MessageCircle, Printer, MessagesSquare } from "lucide-react";
+import { LayoutDashboard, Calendar, BarChart3, Users, Settings, Sparkles, MessageCircle, MessagesSquare, Workflow, Contact, Radio } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Megaphone, label: "Campagnes", path: "/campagnes" },
+  { icon: Workflow, label: "Automations", path: "/automations" },
   { icon: MessageCircle, label: "Berichten", path: "/berichten" },
+  { icon: Contact, label: "Contacten", path: "/contacten" },
+  { icon: Radio, label: "Broadcasts", path: "/broadcasts" },
   { icon: Calendar, label: "Content Kalender", path: "/content-kalender" },
   { icon: MessagesSquare, label: "Groepschat", path: "/groepschat" },
-  { icon: Printer, label: "Promotiemateriaal", path: "/promotiemateriaal" },
   { icon: BarChart3, label: "Analytics", path: "/analytics" },
   { icon: Users, label: "Team", path: "/team" },
   { icon: Settings, label: "Instellingen", path: "/instellingen" },
@@ -37,7 +38,7 @@ const Sidebar = () => {
               to={item.path}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-rose-light text-primary"
+                  ? "bg-green-light text-primary"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               }`}
             >
@@ -47,17 +48,6 @@ const Sidebar = () => {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-semibold">
-            JS
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">Ji-Soo Kim</p>
-            <p className="text-xs text-muted-foreground">Marketing Lead</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 };
