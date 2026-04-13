@@ -11,7 +11,7 @@ import Contacten from "./pages/Contacten";
 import Broadcasts from "./pages/Broadcasts";
 import ContentKalender from "./pages/ContentKalender";
 import Groepschat from "./pages/Groepschat";
-import Analytics from "./pages/Analytics";
+
 import Team from "./pages/Team";
 import Instellingen from "./pages/Instellingen";
 import Berichten from "./pages/Berichten";
@@ -35,7 +35,7 @@ const App = () => (
               <Route path="/broadcasts" element={<Broadcasts />} />
               <Route path="/content-kalender" element={<ContentKalender />} />
               <Route path="/groepschat" element={<Groepschat />} />
-              <Route path="/analytics" element={<Analytics />} />
+              
               <Route path="/team" element={<Team />} />
               <Route path="/instellingen" element={<Instellingen />} />
             </Route>
