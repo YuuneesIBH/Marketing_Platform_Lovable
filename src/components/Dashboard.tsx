@@ -35,7 +35,7 @@ interface Product {
 
 const iconMap: Record<string, React.ElementType> = { Eye, Heart, ShoppingBag, TrendingUp };
 const statusColor: Record<string, string> = {
-  Actief: "bg-sage text-charcoal",
+  Actief: "bg-accent text-accent-foreground",
   Gepland: "bg-secondary text-secondary-foreground",
   Review: "bg-accent text-accent-foreground",
 };
@@ -301,7 +301,7 @@ const Dashboard = () => {
             <div className="space-y-4">
               {topProducts.map((p, i) => (
                 <div key={i} className="flex items-center gap-3 group">
-                  <span className="w-6 h-6 rounded-full bg-rose-light text-primary text-xs font-semibold flex items-center justify-center">{i + 1}</span>
+                  <span className="w-6 h-6 rounded-full bg-green-light text-primary text-xs font-semibold flex items-center justify-center">{i + 1}</span>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">{p.name}</p>
                     <p className="text-xs text-muted-foreground">{p.sales} verkocht</p>

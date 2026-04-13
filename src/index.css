@@ -6,51 +6,51 @@
 
 @layer base {
   :root {
-    --background: 30 33% 97%;
-    --foreground: 240 10% 15%;
+    --background: 40 30% 95%;
+    --foreground: 150 10% 15%;
 
-    --card: 30 25% 99%;
-    --card-foreground: 240 10% 15%;
+    --card: 40 25% 98%;
+    --card-foreground: 150 10% 15%;
 
-    --popover: 30 25% 99%;
-    --popover-foreground: 240 10% 15%;
+    --popover: 40 25% 98%;
+    --popover-foreground: 150 10% 15%;
 
-    --primary: 350 60% 65%;
+    --primary: 152 40% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 30% 93%;
-    --secondary-foreground: 240 10% 20%;
+    --secondary: 40 25% 90%;
+    --secondary-foreground: 150 10% 20%;
 
-    --muted: 30 20% 94%;
-    --muted-foreground: 240 5% 50%;
+    --muted: 40 15% 92%;
+    --muted-foreground: 150 5% 45%;
 
-    --accent: 20 60% 88%;
-    --accent-foreground: 240 10% 15%;
+    --accent: 150 25% 85%;
+    --accent-foreground: 150 10% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 20% 90%;
-    --input: 30 20% 90%;
-    --ring: 350 60% 65%;
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 152 40% 38%;
 
     --radius: 0.75rem;
 
-    --rose: 350 60% 65%;
-    --rose-light: 350 70% 92%;
-    --blush: 20 60% 88%;
-    --cream: 30 33% 97%;
-    --sage: 160 20% 75%;
-    --charcoal: 240 10% 15%;
+    --green: 152 40% 38%;
+    --green-light: 150 30% 90%;
+    --sage: 150 20% 75%;
+    --beige: 40 30% 95%;
+    --beige-dark: 40 20% 80%;
+    --charcoal: 150 10% 15%;
 
-    --sidebar-background: 30 25% 99%;
-    --sidebar-foreground: 240 10% 15%;
-    --sidebar-primary: 350 60% 65%;
+    --sidebar-background: 40 25% 98%;
+    --sidebar-foreground: 150 10% 15%;
+    --sidebar-primary: 152 40% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 30% 93%;
-    --sidebar-accent-foreground: 240 10% 15%;
-    --sidebar-border: 30 20% 90%;
-    --sidebar-ring: 350 60% 65%;
+    --sidebar-accent: 40 25% 90%;
+    --sidebar-accent-foreground: 150 10% 15%;
+    --sidebar-border: 40 20% 88%;
+    --sidebar-ring: 152 40% 38%;
 
     --font-display: 'Playfair Display', serif;
     --font-body: 'DM Sans', sans-serif;

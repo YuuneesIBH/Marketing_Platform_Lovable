@@ -6,14 +6,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
-import Campagnes from "./pages/Campagnes";
+import Automations from "./pages/Automations";
+import Contacten from "./pages/Contacten";
+import Broadcasts from "./pages/Broadcasts";
 import ContentKalender from "./pages/ContentKalender";
 import Groepschat from "./pages/Groepschat";
 import Analytics from "./pages/Analytics";
 import Team from "./pages/Team";
 import Instellingen from "./pages/Instellingen";
 import Berichten from "./pages/Berichten";
-import Promotiemateriaal from "./pages/Promotiemateriaal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,12 +29,13 @@ const App = () => (
           <Routes>
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/campagnes" element={<Campagnes />} />
+              <Route path="/automations" element={<Automations />} />
+              <Route path="/berichten" element={<Berichten />} />
+              <Route path="/contacten" element={<Contacten />} />
+              <Route path="/broadcasts" element={<Broadcasts />} />
               <Route path="/content-kalender" element={<ContentKalender />} />
               <Route path="/groepschat" element={<Groepschat />} />
-              <Route path="/promotiemateriaal" element={<Promotiemateriaal />} />
               <Route path="/analytics" element={<Analytics />} />
-              <Route path="/berichten" element={<Berichten />} />
               <Route path="/team" element={<Team />} />
               <Route path="/instellingen" element={<Instellingen />} />
             </Route>
