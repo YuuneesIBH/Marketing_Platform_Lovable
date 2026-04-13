@@ -1,17 +1,12 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-export interface TeamMember {
-  name: string;
-  role: string;
-  email: string;
-  initials: string;
-  color: string;
-}
+import { createContext, useContext, ReactNode } from "react";
+import { usePersistedState } from "@/lib/api";
+import type { TeamMember } from "@/lib/app-types";
 
 interface TeamContextType {
   team: TeamMember[];
-  addMember: (member: TeamMember) => void;
-  removeMember: (index: number) => void;
+  loading: boolean;
+  addMember: (member: Omit<TeamMember, "id" | "color">) => Promise<void>;
+  removeMember: (id: string) => Promise<void>;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -19,18 +14,25 @@ const TeamContext = createContext<TeamContextType | undefined>(undefined);
 const colors = ["bg-primary", "bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4"];
 
 export const TeamProvider = ({ children }: { children: ReactNode }) => {
-  const [team, setTeam] = useState<TeamMember[]>([]);
+  const { value: team, setValue: setTeam, loading } = usePersistedState<TeamMember[]>("team", []);
 
-  const addMember = (member: TeamMember) => {
-    setTeam((prev) => [...prev, { ...member, color: colors[prev.length % colors.length] }]);
+  const addMember = async (member: Omit<TeamMember, "id" | "color">) => {
+    await setTeam((prev) => [
+      ...prev,
+      {
+        ...member,
+        id: `member-${Date.now()}`,
+        color: colors[prev.length % colors.length],
+      },
+    ]);
   };
 
-  const removeMember = (index: number) => {
-    setTeam((prev) => prev.filter((_, i) => i !== index));
+  const removeMember = async (id: string) => {
+    await setTeam((prev) => prev.filter((member) => member.id !== id));
   };
 
   return (
-    <TeamContext.Provider value={{ team, addMember, removeMember }}>
+    <TeamContext.Provider value={{ team, loading, addMember, removeMember }}>
       {children}
     </TeamContext.Provider>
   );

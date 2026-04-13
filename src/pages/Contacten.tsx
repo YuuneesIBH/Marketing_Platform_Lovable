@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Contact, Plus, Search, Trash2, Pencil, Instagram, Music2, Tag, Filter } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -7,25 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
-
-interface ContactItem {
-  id: string;
-  name: string;
-  username: string;
-  platform: "instagram" | "tiktok";
-  tags: string[];
-  subscribed: boolean;
-  lastInteraction: string;
-  source: string;
-}
+import { usePersistedState } from "@/lib/api";
+import type { ContactItem } from "@/lib/app-types";
 
 const Contacten = () => {
-  const [contacts, setContacts] = useState<ContactItem[]>([]);
+  const { t } = useLanguage();
+  const { value: contacts, setValue: setContacts, loading } = usePersistedState<ContactItem[]>("contacts", []);
   const [search, setSearch] = useState("");
   const [filterTag, setFilterTag] = useState("all");
   const [open, setOpen] = useState(false);
-  const [editIdx, setEditIdx] = useState(-1);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     username: "",
@@ -34,162 +27,239 @@ const Contacten = () => {
     source: "",
   });
 
-  const allTags = [...new Set(contacts.flatMap((c) => c.tags))];
+  const resetForm = () => {
+    setForm({ name: "", username: "", platform: "instagram", tags: "", source: "" });
+    setEditId(null);
+  };
+
+  const allTags = useMemo(() => [...new Set(contacts.flatMap((contact) => contact.tags))], [contacts]);
 
   const filtered = contacts
-    .filter((c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.username.toLowerCase().includes(search.toLowerCase()))
-    .filter((c) => filterTag === "all" || c.tags.includes(filterTag));
+    .filter(
+      (contact) =>
+        contact.name.toLowerCase().includes(search.toLowerCase()) ||
+        contact.username.toLowerCase().includes(search.toLowerCase()),
+    )
+    .filter((contact) => filterTag === "all" || contact.tags.includes(filterTag));
 
-  const save = () => {
+  const save = async () => {
     if (!form.name.trim() || !form.username.trim()) return;
-    const tags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
-    if (editIdx >= 0) {
-      setContacts((prev) =>
-        prev.map((c, i) =>
-          i === editIdx ? { ...c, name: form.name, username: form.username, platform: form.platform, tags, source: form.source } : c
-        )
+    const tags = form.tags.split(",").map((value) => value.trim()).filter(Boolean);
+
+    if (editId) {
+      await setContacts((prev) =>
+        prev.map((contact) =>
+          contact.id === editId
+            ? {
+                ...contact,
+                name: form.name,
+                username: form.username.startsWith("@") ? form.username : `@${form.username}`,
+                platform: form.platform,
+                tags,
+                source: form.source,
+              }
+            : contact,
+        ),
       );
-      toast({ title: "Contact bijgewerkt" });
+      toast({ title: t("contacts.updated") });
     } else {
-      const newContact: ContactItem = {
-        id: `c-${Date.now()}`,
-        name: form.name,
-        username: form.username.startsWith("@") ? form.username : `@${form.username}`,
-        platform: form.platform,
-        tags,
-        subscribed: true,
-        lastInteraction: "Zojuist",
-        source: form.source || "Handmatig",
-      };
-      setContacts((prev) => [...prev, newContact]);
-      toast({ title: "Contact toegevoegd" });
+      await setContacts((prev) => [
+        ...prev,
+        {
+          id: `c-${Date.now()}`,
+          name: form.name,
+          username: form.username.startsWith("@") ? form.username : `@${form.username}`,
+          platform: form.platform,
+          tags,
+          subscribed: true,
+          lastInteraction: new Date().toISOString(),
+          source: form.source || t("contacts.manual"),
+        },
+      ]);
+      toast({ title: t("contacts.created") });
     }
-    setForm({ name: "", username: "", platform: "instagram", tags: "", source: "" });
-    setEditIdx(-1);
+
+    resetForm();
     setOpen(false);
   };
 
-  const deleteContact = (idx: number) => {
-    const name = contacts[idx].name;
-    setContacts((prev) => prev.filter((_, i) => i !== idx));
-    toast({ title: "Contact verwijderd", description: `${name} is verwijderd.` });
+  const deleteContact = async (id: string) => {
+    const name = contacts.find((contact) => contact.id === id)?.name ?? "";
+    await setContacts((prev) => prev.filter((contact) => contact.id !== id));
+    toast({ title: t("contacts.deleted"), description: name });
   };
 
   const PlatformIcon = ({ platform }: { platform: string }) => {
     const Icon = platform === "instagram" ? Instagram : Music2;
-    return <Icon className="w-3.5 h-3.5" />;
+    return <Icon className="h-3.5 w-3.5" />;
   };
 
   return (
-    <div className="flex-1 p-8 overflow-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex-1 overflow-auto p-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-semibold text-foreground">Contacten</h1>
-          <p className="text-muted-foreground mt-1">Beheer je subscribers en contacten van social media.</p>
+          <h1 className="font-display text-3xl font-semibold text-foreground">{t("contacts.title")}</h1>
+          <p className="mt-1 text-muted-foreground">{t("contacts.subtitle")}</p>
         </div>
-        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditIdx(-1); setForm({ name: "", username: "", platform: "instagram", tags: "", source: "" }); } }}>
+        <Dialog
+          open={open}
+          onOpenChange={(nextOpen) => {
+            setOpen(nextOpen);
+            if (!nextOpen) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
-            <Button className="gap-1.5"><Plus className="w-4 h-4" /> Contact Toevoegen</Button>
+            <Button className="gap-1.5">
+              <Plus className="h-4 w-4" /> {t("contacts.addContact")}
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-display">{editIdx >= 0 ? "Contact Bewerken" : "Nieuw Contact"}</DialogTitle>
+              <DialogTitle className="font-display">
+                {editId ? t("contacts.editContact") : t("contacts.addContact")}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div><Label>Naam</Label><Input placeholder="Bijv. Anna de Vries" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div><Label>Gebruikersnaam</Label><Input placeholder="@gebruiker" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} /></div>
+            <div className="mt-2 space-y-4">
               <div>
-                <Label>Platform</Label>
-                <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v as any })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>{t("team.name")}</Label>
+                <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              </div>
+              <div>
+                <Label>{t("messages.username")}</Label>
+                <Input value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} />
+              </div>
+              <div>
+                <Label>{t("contacts.platform")}</Label>
+                <Select
+                  value={form.platform}
+                  onValueChange={(value) => setForm({ ...form, platform: value as "instagram" | "tiktok" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="instagram">Instagram</SelectItem>
                     <SelectItem value="tiktok">TikTok</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Tags (komma-gescheiden)</Label><Input placeholder="klant, VIP, lead" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} /></div>
-              <div><Label>Bron</Label><Input placeholder="Bijv. DM Keyword, Story Reply" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
-              <Button onClick={save} className="w-full">{editIdx >= 0 ? "Opslaan" : "Toevoegen"}</Button>
+              <div>
+                <Label>{t("contacts.tags")}</Label>
+                <Input
+                  placeholder="vip, creator, lead"
+                  value={form.tags}
+                  onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                />
+              </div>
+              <div>
+                <Label>{t("contacts.source")}</Label>
+                <Input
+                  placeholder={t("contacts.manual")}
+                  value={form.source}
+                  onChange={(event) => setForm({ ...form, source: event.target.value })}
+                />
+              </div>
+              <Button onClick={() => void save()} className="w-full">
+                {editId ? t("common.save") : t("common.add")}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground">Totaal Contacten</p>
-          <p className="text-xl font-semibold text-foreground mt-1">{contacts.length}</p>
-        </div>
-        <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground">Instagram</p>
-          <p className="text-xl font-semibold text-foreground mt-1">{contacts.filter((c) => c.platform === "instagram").length}</p>
-        </div>
-        <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground">TikTok</p>
-          <p className="text-xl font-semibold text-foreground mt-1">{contacts.filter((c) => c.platform === "tiktok").length}</p>
-        </div>
-        <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground">Tags</p>
-          <p className="text-xl font-semibold text-foreground mt-1">{allTags.length}</p>
-        </div>
-      </div>
-
-      {/* Search & filter */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Zoek contact..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      <div className="mb-6 flex gap-3">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t("contacts.searchPlaceholder")}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="pl-9"
+          />
         </div>
         {allTags.length > 0 && (
           <Select value={filterTag} onValueChange={setFilterTag}>
-            <SelectTrigger className="w-40">
-              <Filter className="w-3.5 h-3.5 mr-1.5" />
-              <SelectValue placeholder="Filter op tag" />
+            <SelectTrigger className="w-44">
+              <Filter className="mr-1.5 h-3.5 w-3.5" />
+              <SelectValue placeholder={t("contacts.filterByTag")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle tags</SelectItem>
+              <SelectItem value="all">{t("contacts.allTags")}</SelectItem>
               {allTags.map((tag) => (
-                <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                <SelectItem key={tag} value={tag}>
+                  {tag}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         )}
       </div>
 
-      {filtered.length > 0 ? (
+      {loading && contacts.length === 0 ? (
+        <div className="glass-card rounded-xl p-10 text-center text-sm text-muted-foreground">
+          Contacten worden geladen...
+        </div>
+      ) : filtered.length > 0 ? (
         <div className="space-y-2">
-          {filtered.map((contact, i) => (
-            <div key={contact.id} className="glass-card rounded-xl p-4 flex items-center gap-4 animate-fade-in group" style={{ animationDelay: `${i * 40}ms` }}>
+          {filtered.map((contact, index) => (
+            <div
+              key={contact.id}
+              className="glass-card group flex items-center gap-4 rounded-xl p-4"
+              style={{ animationDelay: `${index * 40}ms` }}
+            >
               <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                  {contact.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
+                  {contact.name
+                    .split(" ")
+                    .map((part) => part[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-foreground">{contact.name}</p>
                   <PlatformIcon platform={contact.platform} />
                 </div>
-                <p className="text-xs text-muted-foreground">{contact.username} · {contact.source}</p>
+                <p className="text-xs text-muted-foreground">
+                  {contact.username} · {contact.source}
+                </p>
               </div>
               <div className="flex items-center gap-1.5">
                 {contact.tags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="text-[10px]">
-                    <Tag className="w-2.5 h-2.5 mr-0.5" />{tag}
+                    <Tag className="mr-0.5 h-2.5 w-2.5" />
+                    {tag}
                   </Badge>
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground shrink-0">{contact.lastInteraction}</span>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
-                  setForm({ name: contact.name, username: contact.username, platform: contact.platform, tags: contact.tags.join(", "), source: contact.source });
-                  setEditIdx(i);
-                  setOpen(true);
-                }}><Pencil className="w-3.5 h-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => deleteContact(i)}>
-                  <Trash2 className="w-3.5 h-3.5" />
+              <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => {
+                    setForm({
+                      name: contact.name,
+                      username: contact.username,
+                      platform: contact.platform,
+                      tags: contact.tags.join(", "),
+                      source: contact.source,
+                    });
+                    setEditId(contact.id);
+                    setOpen(true);
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-destructive"
+                  onClick={() => void deleteContact(contact.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -197,11 +267,11 @@ const Contacten = () => {
         </div>
       ) : (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Contact className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm font-medium text-foreground mb-1">Geen contacten</p>
-          <p className="text-xs text-muted-foreground mb-4">Voeg contacten toe of ze worden automatisch aangemaakt via je automation flows.</p>
+          <Contact className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+          <p className="mb-1 text-sm font-medium text-foreground">{t("contacts.noContacts")}</p>
+          <p className="mb-4 text-xs text-muted-foreground">{t("contacts.noContactsBody")}</p>
           <Button variant="outline" onClick={() => setOpen(true)} className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" /> Contact Toevoegen
+            <Plus className="h-3.5 w-3.5" /> {t("contacts.addContact")}
           </Button>
         </div>
       )}

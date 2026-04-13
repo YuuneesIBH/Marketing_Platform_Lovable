@@ -1,265 +1,339 @@
-import { useState, useRef, useEffect } from "react";
-import { MessagesSquare, Send, Hash, Plus, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MessagesSquare, Send, Hash, Plus, X, Paperclip, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useTeam } from "@/contexts/TeamContext";
-
-interface ChatMessage {
-  id: string;
-  text: string;
-  sender: string;
-  avatar: string;
-  color: string;
-  timestamp: Date;
-}
-
-interface Channel {
-  id: string;
-  name: string;
-  description: string;
-  messages: ChatMessage[];
-}
-
-const initialChannels: Channel[] = [
-  { id: "1", name: "algemeen", description: "Algemene teamupdates en aankondigingen", messages: [] },
-  { id: "2", name: "campagnes", description: "Campagne planning en strategie", messages: [] },
-  { id: "3", name: "content-ideeën", description: "Brainstorm en content inspiratie", messages: [] },
-  { id: "4", name: "design", description: "Design feedback en assets", messages: [] },
-];
+import { usePersistedState } from "@/lib/api";
+import type { GroupChatState, Channel, SharedAsset } from "@/lib/app-types";
 
 const Groepschat = () => {
+  const { t, locale } = useLanguage();
   const { team } = useTeam();
-  const currentUser = team[0];
-  const [channels, setChannels] = useState<Channel[]>(initialChannels);
-  const [selectedId, setSelectedId] = useState("1");
+  const { toast } = useToast();
+  const defaultChannels = useMemo<Channel[]>(
+    () => [
+      { id: "5", name: "social-media", description: t("groupChat.channelsData.socialMedia"), messages: [] },
+      { id: "6", name: "advertenties", description: t("groupChat.channelsData.ads"), messages: [] },
+      { id: "7", name: "e-mail-marketing", description: t("groupChat.channelsData.emailMarketing"), messages: [] },
+      { id: "8", name: "seo-website", description: t("groupChat.channelsData.seoWebsite"), messages: [] },
+      { id: "9", name: "promomateriaal", description: "Uploads en downloads van promobestanden", messages: [] },
+    ],
+    [t],
+  );
+  const { value, setValue, loading } = usePersistedState<GroupChatState>("groupchat", {
+    channels: defaultChannels,
+    sharedAssets: [],
+  });
+  const channels = value.channels.length > 0 ? value.channels : defaultChannels;
+  const sharedAssets = value.sharedAssets;
+  const [selectedId, setSelectedId] = useState(defaultChannels[0]?.id ?? "");
   const [message, setMessage] = useState("");
   const [newChannelOpen, setNewChannelOpen] = useState(false);
   const [newChannel, setNewChannel] = useState({ name: "", description: "" });
-  const { toast } = useToast();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const uploadRef = useRef<HTMLInputElement>(null);
 
-  const selected = channels.find((c) => c.id === selectedId)!;
+  useEffect(() => {
+    if (!selectedId && channels[0]) {
+      setSelectedId(channels[0].id);
+    }
+  }, [channels, selectedId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selected?.messages.length]);
+  }, [channels, selectedId]);
 
-  const handleSend = () => {
-    if (!message.trim() || !currentUser) return;
-    const newMsg: ChatMessage = {
-      id: `m${Date.now()}`,
-      text: message,
+  const currentUser = team[0] ?? {
+    name: t("groupChat.you"),
+    initials: "JI",
+    color: "bg-primary",
+  };
+  const selected = channels.find((channel) => channel.id === selectedId) ?? channels[0];
+  const isPromoChannel = selected?.name === "promomateriaal";
+
+  const updateChannels = async (updater: (current: Channel[]) => Channel[]) => {
+    await setValue((prev) => ({ ...prev, channels: updater(prev.channels.length > 0 ? prev.channels : defaultChannels) }));
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() || !selected) return;
+    const nextMessage = {
+      id: `m-${Date.now()}`,
+      text: message.trim(),
       sender: currentUser.name,
       avatar: currentUser.initials,
       color: currentUser.color,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
-    setChannels((prev) =>
-      prev.map((c) => (c.id === selectedId ? { ...c, messages: [...c.messages, newMsg] } : c))
+
+    await updateChannels((prev) =>
+      prev.map((channel) =>
+        channel.id === selected.id ? { ...channel, messages: [...channel.messages, nextMessage] } : channel,
+      ),
     );
     setMessage("");
   };
 
-  const handleCreateChannel = () => {
+  const handleCreateChannel = async () => {
     if (!newChannel.name.trim()) {
-      toast({ title: "Geef het kanaal een naam", variant: "destructive" });
+      toast({ title: t("groupChat.nameRequired"), variant: "destructive" });
       return;
     }
-    const channel: Channel = {
-      id: `ch${Date.now()}`,
+
+    const channel = {
+      id: `ch-${Date.now()}`,
       name: newChannel.name.toLowerCase().replace(/\s+/g, "-"),
-      description: newChannel.description || "Nieuw kanaal",
+      description: newChannel.description || t("groupChat.defaultDescription"),
       messages: [],
     };
-    setChannels((prev) => [...prev, channel]);
+
+    await updateChannels((prev) => [...prev, channel]);
     setSelectedId(channel.id);
     setNewChannel({ name: "", description: "" });
     setNewChannelOpen(false);
-    toast({ title: "Kanaal aangemaakt", description: `#${channel.name} is klaar voor gebruik.` });
+    toast({ title: t("groupChat.channelCreated"), description: `#${channel.name}` });
   };
 
-  const handleDeleteChannel = (id: string) => {
+  const handleDeleteChannel = async (id: string) => {
     if (channels.length <= 1) return;
-    const ch = channels.find((c) => c.id === id);
-    setChannels((prev) => prev.filter((c) => c.id !== id));
-    if (selectedId === id) setSelectedId(channels.find((c) => c.id !== id)!.id);
-    toast({ title: "Kanaal verwijderd", description: `#${ch?.name} is verwijderd.` });
+    const fallbackId = channels.find((channel) => channel.id !== id)?.id ?? "";
+    await updateChannels((prev) => prev.filter((channel) => channel.id !== id));
+    if (selectedId === id) setSelectedId(fallbackId);
+    toast({ title: t("groupChat.channelDeleted") });
   };
 
-  const formatTime = (d: Date) =>
-    d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+  const formatFileSize = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
-  const formatDate = (d: Date) => {
+  const readAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+  const handleUploadFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) return;
+
+    const uploaded: SharedAsset[] = await Promise.all(
+      files.map(async (file) => ({
+        id: `asset-${Date.now()}-${file.name}`,
+        name: file.name,
+        sizeLabel: formatFileSize(file.size),
+        uploadedAt: new Date().toISOString(),
+        downloadUrl: await readAsDataUrl(file),
+      })),
+    );
+
+    await setValue((prev) => ({ ...prev, sharedAssets: [...uploaded, ...prev.sharedAssets] }));
+    event.target.value = "";
+  };
+
+  const formatTime = (value: string) =>
+    new Date(value).toLocaleTimeString(locale === "nl" ? "nl-NL" : "en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const formatDate = (value: string) => {
+    const date = new Date(value);
     const now = new Date();
-    const diff = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diff === 0) return "Vandaag";
-    if (diff === 1) return "Gisteren";
-    return d.toLocaleDateString("nl-NL", { day: "numeric", month: "long" });
+    const diff = Math.floor((now.getTime() - date.getTime()) / 86400000);
+    if (diff === 0) return t("common.today");
+    if (diff === 1) return t("common.yesterday");
+    return date.toLocaleDateString(locale === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "long" });
   };
 
-  // Group messages by date
-  const groupedMessages: { date: string; messages: ChatMessage[] }[] = [];
-  selected.messages.forEach((msg) => {
-    const dateStr = formatDate(msg.timestamp);
-    const last = groupedMessages[groupedMessages.length - 1];
-    if (last && last.date === dateStr) {
-      last.messages.push(msg);
-    } else {
-      groupedMessages.push({ date: dateStr, messages: [msg] });
-    }
-  });
+  const groupedMessages = selected
+    ? selected.messages.reduce<{ date: string; messages: Channel["messages"] }[]>((groups, currentMessage) => {
+        const date = formatDate(currentMessage.timestamp);
+        const lastGroup = groups[groups.length - 1];
+        if (lastGroup?.date === date) {
+          lastGroup.messages.push(currentMessage);
+        } else {
+          groups.push({ date, messages: [currentMessage] });
+        }
+        return groups;
+      }, [])
+    : [];
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-background">
-      {/* Header */}
+    <div className="flex min-h-screen flex-1 flex-col bg-background">
       <header className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center gap-3">
-          <MessagesSquare className="w-5 h-5 text-primary" />
-          <h1 className="text-xl font-semibold text-foreground">Groepschat</h1>
-          <span className="text-sm text-muted-foreground">— Interne teamcommunicatie</span>
+          <MessagesSquare className="h-5 w-5 text-primary" />
+          <h1 className="text-xl font-semibold text-foreground">{t("groupChat.title")}</h1>
+          <span className="text-sm text-muted-foreground">- {t("groupChat.subtitle")}</span>
         </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Channel sidebar */}
-        <aside className="w-60 border-r border-border bg-card flex flex-col shrink-0">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kanalen</span>
+        <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-card">
+          <div className="flex items-center justify-between border-b border-border p-4">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("groupChat.channels")}</span>
             <Dialog open={newChannelOpen} onOpenChange={setNewChannelOpen}>
               <DialogTrigger asChild>
-                <button className="text-muted-foreground hover:text-foreground transition-colors">
-                  <Plus className="w-4 h-4" />
+                <button className="text-muted-foreground transition-colors hover:text-foreground">
+                  <Plus className="h-4 w-4" />
                 </button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle className="font-display">Nieuw Kanaal</DialogTitle>
+                  <DialogTitle className="font-display">{t("groupChat.newChannel")}</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 mt-2">
+                <div className="mt-2 space-y-4">
                   <div>
-                    <Label>Kanaal naam</Label>
-                    <Input placeholder="bijv. social-media" value={newChannel.name} onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })} />
+                    <Label>{t("groupChat.channelName")}</Label>
+                    <Input value={newChannel.name} onChange={(event) => setNewChannel({ ...newChannel, name: event.target.value })} />
                   </div>
                   <div>
-                    <Label>Beschrijving</Label>
-                    <Input placeholder="Waar gaat dit kanaal over?" value={newChannel.description} onChange={(e) => setNewChannel({ ...newChannel, description: e.target.value })} />
+                    <Label>{t("groupChat.channelDescription")}</Label>
+                    <Input value={newChannel.description} onChange={(event) => setNewChannel({ ...newChannel, description: event.target.value })} />
                   </div>
-                  <Button onClick={handleCreateChannel} className="w-full">Kanaal aanmaken</Button>
+                  <Button onClick={() => void handleCreateChannel()} className="w-full">
+                    {t("groupChat.createChannel")}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-2 space-y-0.5">
-              {channels.map((ch) => (
+            <div className="space-y-0.5 p-2">
+              {channels.map((channel) => (
                 <button
-                  key={ch.id}
-                  onClick={() => setSelectedId(ch.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors group ${
-                    ch.id === selectedId
-                      ? "bg-secondary text-foreground font-medium"
-                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  key={channel.id}
+                  onClick={() => setSelectedId(channel.id)}
+                  className={`group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                    channel.id === selectedId ? "bg-secondary font-medium text-foreground" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                   }`}
                 >
-                  <Hash className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate flex-1 text-left">{ch.name}</span>
+                  <Hash className="h-3.5 w-3.5 shrink-0" />
+                  <span className="flex-1 truncate text-left">{channel.name}</span>
                   {channels.length > 1 && (
                     <span
-                      onClick={(e) => { e.stopPropagation(); handleDeleteChannel(ch.id); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleDeleteChannel(channel.id);
+                      }}
+                      className="rounded p-0.5 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="h-3 w-3" />
                     </span>
                   )}
                 </button>
               ))}
             </div>
           </ScrollArea>
-          {/* Online members */}
-          <div className="p-4 border-t border-border">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Online — {team.length}</p>
+          <div className="border-t border-border p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {t("groupChat.online")} - {team.length}
+            </p>
             <div className="space-y-2">
-              {team.map((m) => (
-                <div key={m.name} className="flex items-center gap-2">
-                  <div className="relative">
-                    <Avatar className="h-6 w-6">
-                      <AvatarFallback className={`${m.color} text-primary-foreground text-[10px] font-semibold`}>{m.initials}</AvatarFallback>
-                    </Avatar>
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-chart-2 rounded-full border-2 border-card" />
-                  </div>
-                  <span className="text-xs text-foreground truncate">{m.name}</span>
+              {team.map((member) => (
+                <div key={member.id} className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarFallback className={`${member.color} text-[10px] font-semibold text-primary-foreground`}>
+                      {member.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-xs text-foreground">{member.name}</span>
                 </div>
               ))}
             </div>
           </div>
         </aside>
 
-        {/* Chat area */}
-        <div className="flex-1 flex flex-col">
-          {/* Channel header */}
-          <div className="border-b border-border bg-card px-6 py-3 flex items-center gap-2">
-            <Hash className="w-4 h-4 text-muted-foreground" />
-            <span className="font-semibold text-foreground">{selected.name}</span>
-            <span className="text-sm text-muted-foreground ml-2">{selected.description}</span>
+        <div className="flex flex-1 flex-col">
+          <div className="flex items-center gap-2 border-b border-border bg-card px-6 py-3">
+            <Hash className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold text-foreground">{selected?.name}</span>
+            <span className="ml-2 text-sm text-muted-foreground">{selected?.description}</span>
+            {isPromoChannel && (
+              <>
+                <input ref={uploadRef} type="file" multiple className="hidden" onChange={(event) => void handleUploadFiles(event)} />
+                <Button size="sm" variant="outline" className="ml-auto gap-1.5" onClick={() => uploadRef.current?.click()}>
+                  <Paperclip className="h-3.5 w-3.5" /> Upload
+                </Button>
+              </>
+            )}
           </div>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-6">
-            <div className="max-w-3xl mx-auto space-y-6">
-              {groupedMessages.map((group) => (
-                <div key={group.date}>
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground font-medium">{group.date}</span>
-                    <div className="flex-1 h-px bg-border" />
-                  </div>
-                  <div className="space-y-4">
-                    {group.messages.map((msg) => (
-                      <div key={msg.id} className="flex items-start gap-3 group">
-                        <Avatar className="h-9 w-9 mt-0.5">
-                          <AvatarFallback className={`${msg.color} text-primary-foreground text-xs font-semibold`}>{msg.avatar}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-sm font-semibold text-foreground">{msg.sender}</span>
-                            <span className="text-[11px] text-muted-foreground">{formatTime(msg.timestamp)}</span>
+          <ScrollArea className="flex-1 px-6 py-4">
+            {loading && channels.length === 0 ? (
+              <div className="text-sm text-muted-foreground">Groepschat wordt geladen...</div>
+            ) : (
+              <div className="space-y-6">
+                {groupedMessages.map((group) => (
+                  <div key={group.date}>
+                    <p className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">{group.date}</p>
+                    <div className="space-y-3">
+                      {group.messages.map((entry) => (
+                        <div key={entry.id} className="flex gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className={`${entry.color} text-xs font-semibold text-primary-foreground`}>
+                              {entry.avatar}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="max-w-xl rounded-2xl bg-card px-4 py-3 shadow-sm">
+                            <div className="mb-1 flex items-center gap-2">
+                              <span className="text-sm font-semibold text-foreground">{entry.sender}</span>
+                              <span className="text-[11px] text-muted-foreground">{formatTime(entry.timestamp)}</span>
+                            </div>
+                            <p className="text-sm text-foreground">{entry.text}</p>
                           </div>
-                          <p className="text-sm text-foreground mt-0.5">{msg.text}</p>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {selected.messages.length === 0 && (
-                <div className="text-center py-16 text-muted-foreground">
-                  <MessagesSquare className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                  <p className="text-sm">Nog geen berichten in #{selected.name}</p>
-                  <p className="text-xs mt-1">Stuur het eerste bericht!</p>
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
+                ))}
+
+                {isPromoChannel && sharedAssets.length > 0 && (
+                  <div className="glass-card rounded-xl p-4">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assets</p>
+                    <div className="space-y-2">
+                      {sharedAssets.map((asset) => (
+                        <a key={asset.id} href={asset.downloadUrl} download={asset.name} className="flex items-center justify-between rounded-lg border border-border p-3 text-sm hover:bg-secondary/40">
+                          <div>
+                            <p className="font-medium text-foreground">{asset.name}</p>
+                            <p className="text-xs text-muted-foreground">{asset.sizeLabel}</p>
+                          </div>
+                          <Download className="h-4 w-4 text-muted-foreground" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
+            )}
           </ScrollArea>
 
-          {/* Message input */}
-          <div className="border-t border-border bg-card p-4">
-            <div className="flex gap-2 max-w-3xl mx-auto">
+          <div className="border-t border-border bg-card px-6 py-4">
+            <div className="flex gap-3">
               <Input
-                placeholder={`Bericht in #${selected.name}...`}
+                placeholder={t("groupChat.messagePlaceholder")}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                className="flex-1"
+                onChange={(event) => setMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void handleSend();
+                  }
+                }}
               />
-              <Button onClick={handleSend} disabled={!message.trim()} className="gap-2">
-                <Send className="w-4 h-4" />
-                Verstuur
+              <Button onClick={() => void handleSend()} className="gap-1.5">
+                <Send className="h-4 w-4" /> {t("common.send")}
               </Button>
             </div>
           </div>

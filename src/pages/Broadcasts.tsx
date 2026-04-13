@@ -7,73 +7,80 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "@/hooks/use-toast";
-
-interface Broadcast {
-  id: string;
-  name: string;
-  message: string;
-  platform: "instagram" | "tiktok" | "all";
-  audience: string;
-  status: "draft" | "scheduled" | "sent";
-  scheduledAt: string;
-  recipients: number;
-  opened: number;
-  clicked: number;
-}
+import { usePersistedState } from "@/lib/api";
+import type { Broadcast, MultiPlatform } from "@/lib/app-types";
 
 const Broadcasts = () => {
-  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const { t, locale } = useLanguage();
+  const { value: broadcasts, setValue: setBroadcasts, loading } = usePersistedState<Broadcast[]>("broadcasts", []);
   const [open, setOpen] = useState(false);
-  const [editIdx, setEditIdx] = useState(-1);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     message: "",
-    platform: "instagram" as "instagram" | "tiktok" | "all",
+    platform: "instagram" as MultiPlatform,
     audience: "",
     scheduledAt: "",
   });
 
-  const save = () => {
-    if (!form.name.trim() || !form.message.trim()) return;
-    if (editIdx >= 0) {
-      setBroadcasts((prev) =>
-        prev.map((b, i) =>
-          i === editIdx ? { ...b, name: form.name, message: form.message, platform: form.platform, audience: form.audience, scheduledAt: form.scheduledAt, status: form.scheduledAt ? "scheduled" : "draft" } : b
-        )
-      );
-      toast({ title: "Broadcast bijgewerkt" });
-    } else {
-      const newBroadcast: Broadcast = {
-        id: `bc-${Date.now()}`,
-        name: form.name,
-        message: form.message,
-        platform: form.platform,
-        audience: form.audience || "Alle contacten",
-        status: form.scheduledAt ? "scheduled" : "draft",
-        scheduledAt: form.scheduledAt,
-        recipients: 0,
-        opened: 0,
-        clicked: 0,
-      };
-      setBroadcasts((prev) => [...prev, newBroadcast]);
-      toast({ title: "Broadcast aangemaakt" });
-    }
+  const resetForm = () => {
     setForm({ name: "", message: "", platform: "instagram", audience: "", scheduledAt: "" });
-    setEditIdx(-1);
+    setEditId(null);
+  };
+
+  const save = async () => {
+    if (!form.name.trim() || !form.message.trim()) return;
+
+    if (editId) {
+      await setBroadcasts((prev) =>
+        prev.map((broadcast) =>
+          broadcast.id === editId
+            ? {
+                ...broadcast,
+                ...form,
+                status: form.scheduledAt ? "scheduled" : "draft",
+              }
+            : broadcast,
+        ),
+      );
+      toast({ title: t("broadcasts.updated") });
+    } else {
+      await setBroadcasts((prev) => [
+        ...prev,
+        {
+          id: `bc-${Date.now()}`,
+          name: form.name,
+          message: form.message,
+          platform: form.platform,
+          audience: form.audience || t("broadcasts.allContacts"),
+          status: form.scheduledAt ? "scheduled" : "draft",
+          scheduledAt: form.scheduledAt,
+          recipients: 0,
+          opened: 0,
+          clicked: 0,
+        },
+      ]);
+      toast({ title: t("broadcasts.created") });
+    }
+
+    resetForm();
     setOpen(false);
   };
 
-  const sendNow = (idx: number) => {
-    setBroadcasts((prev) =>
-      prev.map((b, i) => (i === idx ? { ...b, status: "sent" as const } : b))
+  const sendNow = async (id: string) => {
+    await setBroadcasts((prev) =>
+      prev.map((broadcast) =>
+        broadcast.id === id ? { ...broadcast, status: "sent" } : broadcast,
+      ),
     );
-    toast({ title: "Broadcast verstuurd!", description: "Je bericht wordt nu verzonden naar je contacten." });
+    toast({ title: t("broadcasts.sent") });
   };
 
-  const deleteBroadcast = (idx: number) => {
-    setBroadcasts((prev) => prev.filter((_, i) => i !== idx));
-    toast({ title: "Broadcast verwijderd" });
+  const deleteBroadcast = async (id: string) => {
+    await setBroadcasts((prev) => prev.filter((broadcast) => broadcast.id !== id));
+    toast({ title: t("broadcasts.deleted") });
   };
 
   const statusColors: Record<string, string> = {
@@ -82,99 +89,162 @@ const Broadcasts = () => {
     sent: "bg-primary/10 text-primary",
   };
 
-  const statusLabels: Record<string, string> = {
-    draft: "Concept",
-    scheduled: "Ingepland",
-    sent: "Verstuurd",
-  };
-
   return (
-    <div className="flex-1 p-8 overflow-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="flex-1 overflow-auto p-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-semibold text-foreground">Broadcasts</h1>
-          <p className="text-muted-foreground mt-1">Stuur massa-berichten naar je contacten via DM.</p>
+          <h1 className="font-display text-3xl font-semibold text-foreground">{t("broadcasts.title")}</h1>
+          <p className="mt-1 text-muted-foreground">{t("broadcasts.subtitle")}</p>
         </div>
-        <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setEditIdx(-1); setForm({ name: "", message: "", platform: "instagram", audience: "", scheduledAt: "" }); } }}>
+        <Dialog
+          open={open}
+          onOpenChange={(nextOpen) => {
+            setOpen(nextOpen);
+            if (!nextOpen) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
-            <Button className="gap-1.5"><Plus className="w-4 h-4" /> Nieuwe Broadcast</Button>
+            <Button className="gap-1.5">
+              <Plus className="h-4 w-4" /> {t("broadcasts.newBroadcast")}
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-display">{editIdx >= 0 ? "Broadcast Bewerken" : "Nieuwe Broadcast"}</DialogTitle>
+              <DialogTitle className="font-display">
+                {editId ? t("broadcasts.editBroadcast") : t("broadcasts.newBroadcast")}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div><Label>Naam</Label><Input placeholder="Bijv. Lancering aankondiging" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div><Label>Bericht</Label><Textarea placeholder="Typ je broadcast bericht..." rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
+            <div className="mt-2 space-y-4">
               <div>
-                <Label>Platform</Label>
-                <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v as any })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>{t("broadcasts.name")}</Label>
+                <Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              </div>
+              <div>
+                <Label>{t("broadcasts.message")}</Label>
+                <Textarea rows={4} value={form.message} onChange={(event) => setForm({ ...form, message: event.target.value })} />
+              </div>
+              <div>
+                <Label>{t("broadcasts.platform")}</Label>
+                <Select value={form.platform} onValueChange={(value) => setForm({ ...form, platform: value as MultiPlatform })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="instagram">Instagram</SelectItem>
                     <SelectItem value="tiktok">TikTok</SelectItem>
-                    <SelectItem value="all">Alle Platformen</SelectItem>
+                    <SelectItem value="all">{t("common.allPlatforms")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Doelgroep / Tag</Label><Input placeholder="Bijv. VIP, klant (leeg = iedereen)" value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} /></div>
-              <div><Label>Inplannen (optioneel)</Label><Input type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} /></div>
-              <Button onClick={save} className="w-full">{editIdx >= 0 ? "Opslaan" : "Aanmaken"}</Button>
+              <div>
+                <Label>{t("broadcasts.audience")}</Label>
+                <Input value={form.audience} onChange={(event) => setForm({ ...form, audience: event.target.value })} />
+              </div>
+              <div>
+                <Label>{t("broadcasts.schedule")}</Label>
+                <Input type="datetime-local" value={form.scheduledAt} onChange={(event) => setForm({ ...form, scheduledAt: event.target.value })} />
+              </div>
+              <Button onClick={() => void save()} className="w-full">
+                {editId ? t("common.save") : t("common.add")}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-3 gap-4">
         <div className="glass-card rounded-xl p-5">
-          <p className="text-sm text-muted-foreground">Verstuurd</p>
-          <p className="text-2xl font-semibold text-foreground mt-1">{broadcasts.filter((b) => b.status === "sent").length}</p>
+          <p className="text-sm text-muted-foreground">{t("broadcasts.sent")}</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">
+            {broadcasts.filter((broadcast) => broadcast.status === "sent").length}
+          </p>
         </div>
         <div className="glass-card rounded-xl p-5">
-          <p className="text-sm text-muted-foreground">Ingepland</p>
-          <p className="text-2xl font-semibold text-foreground mt-1">{broadcasts.filter((b) => b.status === "scheduled").length}</p>
+          <p className="text-sm text-muted-foreground">{t("broadcasts.scheduled")}</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">
+            {broadcasts.filter((broadcast) => broadcast.status === "scheduled").length}
+          </p>
         </div>
         <div className="glass-card rounded-xl p-5">
-          <p className="text-sm text-muted-foreground">Concepten</p>
-          <p className="text-2xl font-semibold text-foreground mt-1">{broadcasts.filter((b) => b.status === "draft").length}</p>
+          <p className="text-sm text-muted-foreground">{t("broadcasts.draft")}</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">
+            {broadcasts.filter((broadcast) => broadcast.status === "draft").length}
+          </p>
         </div>
       </div>
 
-      {broadcasts.length > 0 ? (
+      {loading && broadcasts.length === 0 ? (
+        <div className="glass-card rounded-xl p-10 text-center text-sm text-muted-foreground">
+          Broadcasts worden geladen...
+        </div>
+      ) : broadcasts.length > 0 ? (
         <div className="space-y-3">
-          {broadcasts.map((bc, i) => {
-            const PlatformIcon = bc.platform === "instagram" ? Instagram : bc.platform === "tiktok" ? Music2 : Radio;
+          {broadcasts.map((broadcast, index) => {
+            const PlatformIcon =
+              broadcast.platform === "instagram" ? Instagram : broadcast.platform === "tiktok" ? Music2 : Radio;
+
             return (
-              <div key={bc.id} className="glass-card rounded-xl p-5 animate-fade-in group" style={{ animationDelay: `${i * 60}ms` }}>
+              <div key={broadcast.id} className="glass-card group rounded-xl p-5" style={{ animationDelay: `${index * 60}ms` }}>
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <PlatformIcon className="w-5 h-5 text-primary" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <PlatformIcon className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground">{bc.name}</p>
-                      <Badge className={`text-[10px] ${statusColors[bc.status]}`}>{statusLabels[bc.status]}</Badge>
+                      <p className="text-sm font-semibold text-foreground">{broadcast.name}</p>
+                      <Badge className={`text-[10px] ${statusColors[broadcast.status]}`}>
+                        {broadcast.status === "draft"
+                          ? t("broadcasts.draft")
+                          : broadcast.status === "scheduled"
+                            ? t("broadcasts.scheduled")
+                            : t("broadcasts.sent")}
+                      </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{bc.message}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />{bc.audience}</span>
-                      {bc.scheduledAt && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(bc.scheduledAt).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>}
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{broadcast.message}</p>
+                    <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {broadcast.audience}
+                      </span>
+                      {broadcast.scheduledAt && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(broadcast.scheduledAt).toLocaleString(locale === "nl" ? "nl-NL" : "en-US", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {bc.status !== "sent" && (
-                      <Button size="sm" variant="outline" className="gap-1 h-7 text-xs" onClick={() => sendNow(i)}>
-                        <Send className="w-3 h-3" /> Nu versturen
+                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {broadcast.status !== "sent" && (
+                      <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => void sendNow(broadcast.id)}>
+                        <Send className="h-3 w-3" /> {t("broadcasts.sendNow")}
                       </Button>
                     )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => {
-                      setForm({ name: bc.name, message: bc.message, platform: bc.platform, audience: bc.audience, scheduledAt: bc.scheduledAt });
-                      setEditIdx(i);
-                      setOpen(true);
-                    }}><Pencil className="w-4 h-4" /></Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => deleteBroadcast(i)}>
-                      <Trash2 className="w-4 h-4" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => {
+                        setForm({
+                          name: broadcast.name,
+                          message: broadcast.message,
+                          platform: broadcast.platform,
+                          audience: broadcast.audience,
+                          scheduledAt: broadcast.scheduledAt,
+                        });
+                        setEditId(broadcast.id);
+                        setOpen(true);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => void deleteBroadcast(broadcast.id)}>
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -184,11 +254,11 @@ const Broadcasts = () => {
         </div>
       ) : (
         <div className="glass-card rounded-xl p-12 text-center">
-          <Radio className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm font-medium text-foreground mb-1">Geen broadcasts</p>
-          <p className="text-xs text-muted-foreground mb-4">Maak een broadcast om een bericht te sturen naar meerdere contacten tegelijk.</p>
+          <Radio className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+          <p className="mb-1 text-sm font-medium text-foreground">{t("broadcasts.emptyTitle")}</p>
+          <p className="mb-4 text-xs text-muted-foreground">{t("broadcasts.emptyBody")}</p>
           <Button variant="outline" onClick={() => setOpen(true)} className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" /> Eerste Broadcast
+            <Plus className="h-3.5 w-3.5" /> {t("broadcasts.firstBroadcast")}
           </Button>
         </div>
       )}

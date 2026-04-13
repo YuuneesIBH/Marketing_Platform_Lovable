@@ -1,3 +1,12 @@
-# Welcome to your Lovable project
+# Oppa Seoul Marketing Platform
 
-TODO: Document your project here
+Interne marketingtool voor Oppa Seoul.
+
+## Database setup
+
+1. Kopieer `.env.example` naar `.env`.
+2. Vul je Postgres-gegevens in.
+3. Start de API met `npm run dev:api`.
+4. Start de frontend met `npm run dev`.
+
+Alle user-aangemaakte data wordt via `/api/state/:key` in Postgres opgeslagen.
